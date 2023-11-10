@@ -113,8 +113,7 @@ osszeg_szukites(Fs, Osszegfeltetel, ILs0, ILs) :-
     ),
     !. % cut
 
-all_the_sator_szukites(_, 0, ILs0, ILs) :-
-    ILs = ILs0.
+all_the_sator_szukites(_, 0, ILs, ILs).
 
 all_the_sator_szukites(Fs, I, ILs0, ILs) :-
     nl,write('Sator szukites':I),
@@ -122,8 +121,7 @@ all_the_sator_szukites(Fs, I, ILs0, ILs) :-
     NewI is I - 1,
     all_the_sator_szukites(Fs, NewI, NewILs, ILs).    
 
-all_the_sor_szukites(_, _, [], ILs0, ILs) :-
-    ILs = ILs0.
+all_the_sor_szukites(_, _, [], ILs, ILs).
 
 all_the_sor_szukites(Fs, I, [Db | RestDb], ILs0, ILs) :-
     nl,write('Sor szukites':I),
@@ -131,8 +129,7 @@ all_the_sor_szukites(Fs, I, [Db | RestDb], ILs0, ILs) :-
     NewI is I + 1,
     all_the_sor_szukites(Fs, NewI, RestDb, NewILs, ILs).
 
-all_the_oszl_szukites(_, _, [], ILs0, ILs) :-
-    ILs = ILs0.
+all_the_oszl_szukites(_, _, [], ILs, ILs).
 
 all_the_oszl_szukites(Fs, I, [Db | RestDb], ILs0, ILs) :-
     nl,write('Oszlop szukites':I),
@@ -147,19 +144,18 @@ do_the_thing(In, ILs0, ILs) :-
     all_the_sor_szukites(Fs, 1, Ss, ILs1, ILs2),
     all_the_oszl_szukites(Fs, 1, Os, ILs2, ILs).
     
+solve(In, ILs0, ILs) :-
+    do_the_thing(In, ILs0, ILs1),
+    (ILs1 = ILs0 -> ILs = ILs1; solve(In, ILs1, ILs)).
+
 satrak(In, Out) :-
     satrak(Ss, Os, Fs) = In,
     length(Ss, N),
     length(Os, M),
     iranylistak(N-M, Fs, ILs0),
-    do_the_thing(In, ILs0, ILs1),
-    do_the_thing(In, ILs1, ILs),
+    solve(In, ILs0, ILs),
     Out = ILs,
     !.
-
-
-
-
 
 
 
