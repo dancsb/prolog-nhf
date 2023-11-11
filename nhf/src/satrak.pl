@@ -168,50 +168,41 @@ fork(ILs, Variants) :-
     first_long_sublist(ILs, ForkPoint),
     generate_variants(ILs, ForkPoint, Variants).
 
-solve(In, ILs0, Sol) :-
-    nl,write('DATHING':ILs0),
+solve(In, ILs0, Sols) :-
     do_the_thing(In, ILs0, ILs),
-    nl,write('ILs':ILs),
-    (check_megoldas(ILs) -> flatten(ILs, Sol), nl,write('WIN':Sol);
+    (check_megoldas(ILs) -> flatten(ILs, Sols);
         fork(ILs, Forks),
-        nl,write('Forks':Forks),
-        findall(Xd, (member(Fork, Forks), solve(In, Fork, Xd)), Sol)
-    ).
+        findall(Sol, (member(Fork, Forks), solve(In, Fork, Sol), Sol \= []), Sols)
+    ),
+    !.
 
-satrak(In, Out) :-
+flatten2([], []).
+
+flatten2([L|Ls], FlatL) :-
+    flatten2(L, NewL),
+    flatten2(Ls, NewLs),
+    append(NewL, NewLs, FlatL).
+
+flatten2(L, [L]).
+
+split_list([], _, []).
+
+split_list(List, Size, [Chunk|Chunks]) :-
+    length(Chunk, Size),
+    append(Chunk, Rest, List),
+    split_list(Rest, Size, Chunks).
+
+satrak_core(In, Out) :-
     satrak(Ss, Os, Fs) = In,
     length(Ss, N),
     length(Os, M),
+    length(Fs, Fsl),
     iranylistak(N-M, Fs, ILs0),
-    solve(In, ILs0, Out),
+    solve(In, ILs0, ILs),
+    flatten2(ILs, Out0),
+    split_list(Out0, Fsl, Out),
     !.
 
-
-
-
-
-
-
-
-
-
-xdddddd(In, Out) :-
-    member(A, In),
-    member(B, In),
-    member(C, In),
-    Out = [A, B, C].
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+satrak(In, Out) :-
+    satrak_core(In, Out0),
+    member(Out, Out0).
