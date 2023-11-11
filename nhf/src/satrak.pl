@@ -116,7 +116,6 @@ osszeg_szukites(Fs, Osszegfeltetel, ILs0, ILs) :-
 all_the_sator_szukites(_, 0, ILs, ILs).
 
 all_the_sator_szukites(Fs, I, ILs0, ILs) :-
-    nl,write('Sator szukites':I),
     (sator_szukites(Fs, I, ILs0, Temp) -> NewILs = Temp; NewILs = ILs0),
     NewI is I - 1,
     all_the_sator_szukites(Fs, NewI, NewILs, ILs).    
@@ -124,42 +123,68 @@ all_the_sator_szukites(Fs, I, ILs0, ILs) :-
 all_the_sor_szukites(_, _, [], ILs, ILs).
 
 all_the_sor_szukites(Fs, I, [Db | RestDb], ILs0, ILs) :-
-    nl,write('Sor szukites':I),
-    (osszeg_szukites(Fs, sor(I, Db), ILs0, Temp) -> NewILs = Temp; NewILs = ILs0),
+    (Db >= 0, osszeg_szukites(Fs, sor(I, Db), ILs0, Temp) -> NewILs = Temp; NewILs = ILs0),
     NewI is I + 1,
     all_the_sor_szukites(Fs, NewI, RestDb, NewILs, ILs).
 
 all_the_oszl_szukites(_, _, [], ILs, ILs).
 
 all_the_oszl_szukites(Fs, I, [Db | RestDb], ILs0, ILs) :-
-    nl,write('Oszlop szukites':I),
-    (osszeg_szukites(Fs, oszl(I, Db), ILs0, Temp) -> NewILs = Temp; NewILs = ILs0),
+    (Db >= 0, osszeg_szukites(Fs, oszl(I, Db), ILs0, Temp) -> NewILs = Temp; NewILs = ILs0),
     NewI is I + 1,
     all_the_oszl_szukites(Fs, NewI, RestDb, NewILs, ILs).
 
-do_the_thing(In, ILs0, ILs) :-
+do_all_the_things(In, ILs0, ILs) :-
     satrak(Ss, Os, Fs) = In,
     length(Fs, Fsl),   
     all_the_sator_szukites(Fs, Fsl, ILs0, ILs1),
     all_the_sor_szukites(Fs, 1, Ss, ILs1, ILs2),
     all_the_oszl_szukites(Fs, 1, Os, ILs2, ILs).
     
-solve(In, ILs0, ILs) :-
-    do_the_thing(In, ILs0, ILs1),
-    (ILs1 = ILs0 -> ILs = ILs1; solve(In, ILs1, ILs)).
+flatten([], []).
+
+flatten([[Dir | _] | RestILs0], [Dir | ILs]) :-
+    flatten(RestILs0, ILs).
+    
+do_the_thing(In, ILs0, ILs) :-
+    do_all_the_things(In, ILs0, ILs1),
+    (ILs1 = ILs0 -> ILs = ILs1; do_the_thing(In, ILs1, ILs)).
+
+check_megoldas([]).
+
+check_megoldas([ILs | RestILs]) :-
+    proper_length(ILs, 1),
+    check_megoldas(RestILs).
+
+first_long_sublist(ILs, ForkPoint) :-
+    member(ForkPoint, ILs),
+    \+proper_length(ForkPoint, 1).
+
+generate_variants(List, ForkPoint, Variants) :-
+    append(Before, [ForkPoint|After], List),
+    findall(Variant, (member(Elem, ForkPoint), Variant0=[[Elem] | After], append(Before, Variant0, Variant)), Variants).
+
+fork(ILs, Variants) :-
+    first_long_sublist(ILs, ForkPoint),
+    generate_variants(ILs, ForkPoint, Variants).
+
+solve(In, ILs0, Sol) :-
+    nl,write('DATHING':ILs0),
+    do_the_thing(In, ILs0, ILs),
+    nl,write('ILs':ILs),
+    (check_megoldas(ILs) -> flatten(ILs, Sol), nl,write('WIN':Sol);
+        fork(ILs, Forks),
+        nl,write('Forks':Forks),
+        findall(Xd, (member(Fork, Forks), solve(In, Fork, Xd)), Sol)
+    ).
 
 satrak(In, Out) :-
     satrak(Ss, Os, Fs) = In,
     length(Ss, N),
     length(Os, M),
     iranylistak(N-M, Fs, ILs0),
-    solve(In, ILs0, ILs),
-    Out = ILs,
+    solve(In, ILs0, Out),
     !.
-
-
-
-
 
 
 
