@@ -37,15 +37,15 @@ részhalmazával teszteljük a programokat, ez a részhalmaz a következő:
 
 tests könyvtárbeli név     teszteléskor megjelenő név
 
-test07d.txt                test0d.txt
-test10d.txt                test1d.txt
-test17d.txt                test2d.txt
-test18d.txt                test3d.txt
-test19d.txt                test4d.txt
-test20d.txt                test5d.txt
-test23d.txt                test6d.txt
-test24d.txt                test7d.txt
-test28d.txt                test8d.txt
-test29d.txt                test9d.txt
+test07d.txt                1. teszteset
+test10d.txt                2. teszteset
+test17d.txt                3. teszteset
+test18d.txt                4. teszteset
+test19d.txt                5. teszteset
+test20d.txt                6. teszteset
+test23d.txt                7. teszteset
+test24d.txt                8. teszteset
+test28d.txt                9. teszteset
+test29d.txt               10. teszteset
 		    
 
