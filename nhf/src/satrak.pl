@@ -140,12 +140,7 @@ do_all_the_things(In, ILs0, ILs) :-
     all_the_sator_szukites(Fs, Fsl, ILs0, ILs1),
     all_the_sor_szukites(Fs, 1, Ss, ILs1, ILs2),
     all_the_oszl_szukites(Fs, 1, Os, ILs2, ILs).
-    
-flatten([], []).
 
-flatten([[Dir | _] | RestILs0], [Dir | ILs]) :-
-    flatten(RestILs0, ILs).
-    
 do_the_thing(In, ILs0, ILs) :-
     do_all_the_things(In, ILs0, ILs1),
     (ILs1 = ILs0 -> ILs = ILs1; do_the_thing(In, ILs1, ILs)).
@@ -156,17 +151,16 @@ check_megoldas([ILs | RestILs]) :-
     proper_length(ILs, 1),
     check_megoldas(RestILs).
 
-first_long_sublist(ILs, ForkPoint) :-
+flatten([], []).
+
+flatten([[Dir | _] | RestILs0], [Dir | ILs]) :-
+    flatten(RestILs0, ILs).
+
+fork(ILs, Forks) :-
     member(ForkPoint, ILs),
-    \+proper_length(ForkPoint, 1).
-
-generate_variants(List, ForkPoint, Variants) :-
-    append(Before, [ForkPoint|After], List),
-    findall(Variant, (member(Elem, ForkPoint), Variant0=[[Elem] | After], append(Before, Variant0, Variant)), Variants).
-
-fork(ILs, Variants) :-
-    first_long_sublist(ILs, ForkPoint),
-    generate_variants(ILs, ForkPoint, Variants).
+    \+proper_length(ForkPoint, 1),
+    append(Before, [ForkPoint | After], ILs),
+    findall(Fork, (member(Dir, ForkPoint), Fork0=[[Dir] | After], append(Before, Fork0, Fork)), Forks).
 
 solve(In, ILs0, Sols) :-
     do_the_thing(In, ILs0, ILs),
@@ -178,31 +172,28 @@ solve(In, ILs0, Sols) :-
 
 flatten2([], []).
 
-flatten2([L|Ls], FlatL) :-
-    flatten2(L, NewL),
-    flatten2(Ls, NewLs),
-    append(NewL, NewLs, FlatL).
+flatten2([List | RestList], FlatList) :-
+    flatten2(List, NewList),
+    flatten2(RestList, NewRestList),
+    append(NewList, NewRestList, FlatList),
+    !.
 
-flatten2(L, [L]).
+flatten2(List, [List]).
 
-split_list([], _, []).
+split_sols([], _, []).
 
-split_list(List, Size, [Chunk|Chunks]) :-
-    length(Chunk, Size),
-    append(Chunk, Rest, List),
-    split_list(Rest, Size, Chunks).
+split_sols(Sols0, Size, [Sol | Sols]) :-
+    length(Sol, Size),
+    append(Sol, RestSols0, Sols0),
+    split_sols(RestSols0, Size, Sols).
 
-satrak_core(In, Out) :-
+satrak(In, Out) :-
     satrak(Ss, Os, Fs) = In,
     length(Ss, N),
     length(Os, M),
     length(Fs, Fsl),
-    iranylistak(N-M, Fs, ILs0),
-    solve(In, ILs0, ILs),
-    flatten2(ILs, Out0),
-    split_list(Out0, Fsl, Out),
-    !.
-
-satrak(In, Out) :-
-    satrak_core(In, Out0),
+    iranylistak(N-M, Fs, ILs),
+    solve(In, ILs, Sols0),
+    flatten2(Sols0, Sols),
+    split_sols(Sols, Fsl, Out0),
     member(Out, Out0).
