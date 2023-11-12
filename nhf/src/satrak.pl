@@ -113,43 +113,40 @@ osszeg_szukites(Fs, Osszegfeltetel, ILs0, ILs) :-
     ),
     !. % cut
 
-all_the_sator_szukites(_, 0, ILs, ILs).
+every_sator_szukites(_, 0, ILs, ILs).
 
-all_the_sator_szukites(Fs, I, ILs0, ILs) :-
+every_sator_szukites(Fs, I, ILs0, ILs) :-
     (sator_szukites(Fs, I, ILs0, Temp) -> NewILs = Temp; NewILs = ILs0),
     NewI is I - 1,
-    all_the_sator_szukites(Fs, NewI, NewILs, ILs).    
+    every_sator_szukites(Fs, NewI, NewILs, ILs).    
 
-all_the_sor_szukites(_, _, [], ILs, ILs).
+every_sor_szukites(_, _, [], ILs, ILs).
 
-all_the_sor_szukites(Fs, I, [Db | RestDb], ILs0, ILs) :-
+every_sor_szukites(Fs, I, [Db | RestDb], ILs0, ILs) :-
     (Db >= 0, osszeg_szukites(Fs, sor(I, Db), ILs0, Temp) -> NewILs = Temp; NewILs = ILs0),
     NewI is I + 1,
-    all_the_sor_szukites(Fs, NewI, RestDb, NewILs, ILs).
+    every_sor_szukites(Fs, NewI, RestDb, NewILs, ILs).
 
-all_the_oszl_szukites(_, _, [], ILs, ILs).
+every_oszl_szukites(_, _, [], ILs, ILs).
 
-all_the_oszl_szukites(Fs, I, [Db | RestDb], ILs0, ILs) :-
+every_oszl_szukites(Fs, I, [Db | RestDb], ILs0, ILs) :-
     (Db >= 0, osszeg_szukites(Fs, oszl(I, Db), ILs0, Temp) -> NewILs = Temp; NewILs = ILs0),
     NewI is I + 1,
-    all_the_oszl_szukites(Fs, NewI, RestDb, NewILs, ILs).
+    every_oszl_szukites(Fs, NewI, RestDb, NewILs, ILs).
 
-do_all_the_things(In, ILs0, ILs) :-
+every_szukites(In, ILs0, ILs) :-
     satrak(Ss, Os, Fs) = In,
     length(Fs, Fsl),   
-    all_the_sator_szukites(Fs, Fsl, ILs0, ILs1),
-    all_the_sor_szukites(Fs, 1, Ss, ILs1, ILs2),
-    all_the_oszl_szukites(Fs, 1, Os, ILs2, ILs).
+    every_sator_szukites(Fs, Fsl, ILs0, ILs1),
+    every_sor_szukites(Fs, 1, Ss, ILs1, ILs2),
+    every_oszl_szukites(Fs, 1, Os, ILs2, ILs3),
+    (ILs3 = ILs0 -> ILs = ILs3; every_szukites(In, ILs3, ILs)).
 
-do_the_thing(In, ILs0, ILs) :-
-    do_all_the_things(In, ILs0, ILs1),
-    (ILs1 = ILs0 -> ILs = ILs1; do_the_thing(In, ILs1, ILs)).
+check_solution([]).
 
-check_megoldas([]).
-
-check_megoldas([ILs | RestILs]) :-
+check_solution([ILs | RestILs]) :-
     proper_length(ILs, 1),
-    check_megoldas(RestILs).
+    check_solution(RestILs).
 
 flatten([], []).
 
@@ -163,8 +160,8 @@ fork(ILs, Forks) :-
     findall(Fork, (member(Dir, ForkPoint), Fork0=[[Dir] | After], append(Before, Fork0, Fork)), Forks).
 
 solve(In, ILs0, Sols) :-
-    do_the_thing(In, ILs0, ILs),
-    (check_megoldas(ILs) -> flatten(ILs, Sols);
+    every_szukites(In, ILs0, ILs),
+    (check_solution(ILs) -> flatten(ILs, Sols);
         fork(ILs, Forks),
         findall(Sol, (member(Fork, Forks), solve(In, Fork, Sol), Sol \= []), Sols)
     ),
