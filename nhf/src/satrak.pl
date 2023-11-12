@@ -1,3 +1,13 @@
+% :- type fLeiro  ---> satrak(sSzS, sSzO, list(parc)).
+% :- type sSzS    == list(int).
+% :- type sSzO    == list(int).
+% :- type parc    == int-int.
+% :- type irany   ---> n    % észak
+%                 ;    e    % kelet
+%                 ;    s    % dél
+%                 ;    w.   % nyugat
+% :- type sHelyek   == list(irany).
+% :- pred satrak(fLeiro::in, sHelyek::out).
 :- use_module(library(lists)). % SICStus lists library betöltése
 
 % Sátor meghatározása fa és irány alapján
@@ -113,27 +123,34 @@ osszeg_szukites(Fs, Osszegfeltetel, ILs0, ILs) :-
     ),
     !. % cut
 
+% Elfogytak a fák
 every_sator_szukites(_, 0, ILs, ILs).
 
+% Összes fára sátorszűkítés alkalmazása rekurzívan
 every_sator_szukites(Fs, I, ILs0, ILs) :-
     (sator_szukites(Fs, I, ILs0, Temp) -> NewILs = Temp; NewILs = ILs0),
     NewI is I - 1,
     every_sator_szukites(Fs, NewI, NewILs, ILs).    
 
+% Elfogytak a sorok
 every_sor_szukites(_, _, [], ILs, ILs).
 
+% Összes sorra összegszűkítés alkalmazása rekurzívan
 every_sor_szukites(Fs, I, [Db | RestDb], ILs0, ILs) :-
     (Db >= 0, osszeg_szukites(Fs, sor(I, Db), ILs0, Temp) -> NewILs = Temp; NewILs = ILs0),
     NewI is I + 1,
     every_sor_szukites(Fs, NewI, RestDb, NewILs, ILs).
 
+% Elfogytak az oszlopok
 every_oszl_szukites(_, _, [], ILs, ILs).
 
+% Összes oszlopra összegszűkítés alkalmazása rekurzívan
 every_oszl_szukites(Fs, I, [Db | RestDb], ILs0, ILs) :-
     (Db >= 0, osszeg_szukites(Fs, oszl(I, Db), ILs0, Temp) -> NewILs = Temp; NewILs = ILs0),
     NewI is I + 1,
     every_oszl_szukites(Fs, NewI, RestDb, NewILs, ILs).
 
+% Összes fajta szűkítés alkalmazása, amíg csak lehet rekurzívan
 every_szukites(In, ILs0, ILs) :-
     satrak(Ss, Os, Fs) = In,
     length(Fs, Fsl),   
@@ -142,43 +159,52 @@ every_szukites(In, ILs0, ILs) :-
     every_oszl_szukites(Fs, 1, Os, ILs2, ILs3),
     (ILs3 = ILs0 -> ILs = ILs3; every_szukites(In, ILs3, ILs)).
 
+% Elfogytak az iránylisták
 check_solution([]).
 
+% Iránylisták ellenőrzése, hogy mindegyik egyértelmű-e
 check_solution([ILs | RestILs]) :-
     proper_length(ILs, 1),
     check_solution(RestILs).
 
+% Elfogytak az iránylisták
 flatten([], []).
 
+% Egyértelmű iránylistákból az irányok összefűzése egy listába
 flatten([[Dir | _] | RestILs0], [Dir | ILs]) :-
     flatten(RestILs0, ILs).
 
+% Első lehetsétges elágazási pont megkeresése (első nem egyértelmű iránylista), és elágazások generálása
 fork(ILs, Forks) :-
     member(ForkPoint, ILs),
     \+proper_length(ForkPoint, 1),
     append(Before, [ForkPoint | After], ILs),
     findall(Fork, (member(Dir, ForkPoint), Fork0=[[Dir] | After], append(Before, Fork0, Fork)), Forks).
 
+% Megoldások generálása
 solve(In, ILs0, Sols) :-
     every_szukites(In, ILs0, ILs),
     (check_solution(ILs) -> flatten(ILs, Sols);
         fork(ILs, Forks),
         findall(Sol, (member(Fork, Forks), solve(In, Fork, Sol), Sol \= []), Sols)
     ),
-    !.
+    !. % cut
 
 flatten2([], []).
 
+% Lista kilapítása
 flatten2([List | RestList], FlatList) :-
     flatten2(List, NewList),
     flatten2(RestList, NewRestList),
     append(NewList, NewRestList, FlatList),
-    !.
+    !. % cut
 
 flatten2(List, [List]).
 
+% Elfogytak a megoldásaok
 split_sols([], _, []).
 
+% Megoldások szétválasztása a kilapított listából
 split_sols(Sols0, Size, [Sol | Sols]) :-
     length(Sol, Size),
     append(Sol, RestSols0, Sols0),
